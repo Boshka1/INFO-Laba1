@@ -4,12 +4,13 @@ import utils.ValidationUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Класс, представляющий сущность "Поставщик автозапчастей" (Supplier).
- * Выполнен пункт 6: перегрузка конструкторов для нетривиальных примеров (строка CSV, JSON).
+ * Выполнен пункт 7: строковое представление (полное и краткое), сравнение на равенство (equals и hashCode).
  */
 public class Supplier {
 
@@ -47,8 +48,6 @@ public class Supplier {
     /**
      * Конструктор 2 (перегрузка для нетривиальных форматов):
      * Создает объект из строки данных (автоматически определяет CSV или JSON формат).
-     *
-     * @param data строка данных в формате CSV (разделитель ';') или JSON
      */
     public Supplier(String data) {
         if (data == null || data.trim().isEmpty()) {
@@ -62,10 +61,9 @@ public class Supplier {
         }
     }
 
-    // --- Вспомогательные методы парсинга для перегруженных конструкторов ---
+    // --- Вспомогательные методы парсинга ---
 
     private void initFromCsv(String csvLine) {
-        // Разделяем по символу точки с запятой
         String[] parts = csvLine.split(";");
         if (parts.length != 8) {
             throw new IllegalArgumentException("Ошибка CSV: ожидалось 8 полей через ';', получено: " + parts.length);
@@ -85,15 +83,12 @@ public class Supplier {
     }
 
     private void initFromJson(String json) {
-        // Простой универсальный парсер JSON без внешних библиотек
         Map<String, String> map = parseSimpleJson(json);
-
         if (!map.containsKey("id") || !map.containsKey("name") || !map.containsKey("inn")
                 || !map.containsKey("ogrn") || !map.containsKey("phone") || !map.containsKey("email")
                 || !map.containsKey("address") || !map.containsKey("contactPerson")) {
             throw new IllegalArgumentException("Ошибка JSON: отсутствуют обязательные ключи объекта Supplier.");
         }
-
         try {
             setId(Integer.parseInt(map.get("id")));
         } catch (NumberFormatException e) {
@@ -118,6 +113,55 @@ public class Supplier {
             map.put(key, value);
         }
         return map;
+    }
+
+    // =============================================================
+    // ПРЕДСТАВЛЕНИЕ ОБЪЕКТА (ПОЛНАЯ И КРАТКАЯ ВЕРСИИ)
+    // =============================================================
+
+    /**
+     * Полная версия представления объекта.
+     */
+    @Override
+    public String toString() {
+        return "=== Поставщик [ID: " + id + "] ===\n" +
+                "  Название        : " + name + "\n" +
+                "  ИНН             : " + inn + "\n" +
+                "  ОГРН            : " + ogrn + "\n" +
+                "  Телефон         : " + phone + "\n" +
+                "  Email           : " + email + "\n" +
+                "  Адрес           : " + address + "\n" +
+                "  Контактное лицо : " + contactPerson;
+    }
+
+    /**
+     * Краткая версия представления объекта.
+     */
+    public String toShortString() {
+        return String.format("[#%d] %s | ИНН: %s | Тел: %s", id, name, inn, phone);
+    }
+
+    // =============================================================
+    // СРАВНЕНИЕ ОБЪЕКТОВ НА РАВЕНСТВО
+    // =============================================================
+
+    /**
+     * Сравнение двух поставщиков на равенство по уникальным полям (id и inn).
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Supplier supplier = (Supplier) o;
+        return id == supplier.id && Objects.equals(inn, supplier.inn);
+    }
+
+    /**
+     * Хэш-код объекта на основе полей id и inn (согласован с equals).
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, inn);
     }
 
     // =============================================================
