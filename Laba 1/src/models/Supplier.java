@@ -2,9 +2,14 @@ package models;
 
 import utils.ValidationUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Класс, представляющий сущность "Поставщик автозапчастей" (Supplier).
- * Выполнен пункт 5: устранение дублирования кода валидации (делегирование в ValidationUtils).
+ * Выполнен пункт 6: перегрузка конструкторов для нетривиальных примеров (строка CSV, JSON).
  */
 public class Supplier {
 
@@ -25,7 +30,7 @@ public class Supplier {
     private static final String CONTACT_PERSON_REGEX = "^[А-Яа-яЁёA-Za-z\\s\\-]{3,150}$";
 
     /**
-     * Полный конструктор для инициализации всех полей сущности.
+     * Конструктор 1 (полный): инициализация объекта через явную передачу всех аргументов.
      */
     public Supplier(int id, String name, String inn, String ogrn,
                     String phone, String email, String address, String contactPerson) {
@@ -39,8 +44,84 @@ public class Supplier {
         setContactPerson(contactPerson);
     }
 
+    /**
+     * Конструктор 2 (перегрузка для нетривиальных форматов):
+     * Создает объект из строки данных (автоматически определяет CSV или JSON формат).
+     *
+     * @param data строка данных в формате CSV (разделитель ';') или JSON
+     */
+    public Supplier(String data) {
+        if (data == null || data.trim().isEmpty()) {
+            throw new IllegalArgumentException("Ошибка: переданная строка данных не может быть пустой.");
+        }
+        String trimmed = data.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            initFromJson(trimmed);
+        } else {
+            initFromCsv(trimmed);
+        }
+    }
+
+    // --- Вспомогательные методы парсинга для перегруженных конструкторов ---
+
+    private void initFromCsv(String csvLine) {
+        // Разделяем по символу точки с запятой
+        String[] parts = csvLine.split(";");
+        if (parts.length != 8) {
+            throw new IllegalArgumentException("Ошибка CSV: ожидалось 8 полей через ';', получено: " + parts.length);
+        }
+        try {
+            setId(Integer.parseInt(parts[0].trim()));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Ошибка CSV: не удалось преобразовать ID в число: " + parts[0]);
+        }
+        setName(parts[1].trim());
+        setInn(parts[2].trim());
+        setOgrn(parts[3].trim());
+        setPhone(parts[4].trim());
+        setEmail(parts[5].trim());
+        setAddress(parts[6].trim());
+        setContactPerson(parts[7].trim());
+    }
+
+    private void initFromJson(String json) {
+        // Простой универсальный парсер JSON без внешних библиотек
+        Map<String, String> map = parseSimpleJson(json);
+
+        if (!map.containsKey("id") || !map.containsKey("name") || !map.containsKey("inn")
+                || !map.containsKey("ogrn") || !map.containsKey("phone") || !map.containsKey("email")
+                || !map.containsKey("address") || !map.containsKey("contactPerson")) {
+            throw new IllegalArgumentException("Ошибка JSON: отсутствуют обязательные ключи объекта Supplier.");
+        }
+
+        try {
+            setId(Integer.parseInt(map.get("id")));
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Ошибка JSON: некорректный ID: " + map.get("id"));
+        }
+        setName(map.get("name"));
+        setInn(map.get("inn"));
+        setOgrn(map.get("ogrn"));
+        setPhone(map.get("phone"));
+        setEmail(map.get("email"));
+        setAddress(map.get("address"));
+        setContactPerson(map.get("contactPerson"));
+    }
+
+    private static Map<String, String> parseSimpleJson(String json) {
+        Map<String, String> map = new HashMap<>();
+        Pattern pattern = Pattern.compile("\"([^\"]+)\"\\s*:\\s*(?:\"([^\"]*)\"|([0-9]+))");
+        Matcher matcher = pattern.matcher(json);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            String value = matcher.group(2) != null ? matcher.group(2) : matcher.group(3);
+            map.put(key, value);
+        }
+        return map;
+    }
+
     // =============================================================
-    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ (БЕЗ ДУБЛИРОВАНИЯ КОДА)
+    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ
     // =============================================================
 
     public static boolean validateId(int id) {
@@ -76,7 +157,7 @@ public class Supplier {
     }
 
     // =============================================================
-    // ГЕТТЕРЫ И СЕТТЕРЫ С ВАЛИДАЦИЕЙ
+    // ГЕТТЕРЫ И СЕТТЕРЫ
     // =============================================================
 
     public int getId() {
