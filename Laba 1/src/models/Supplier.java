@@ -1,11 +1,10 @@
 package models;
 
-import java.util.regex.Pattern;
+import utils.ValidationUtils;
 
 /**
  * Класс, представляющий сущность "Поставщик автозапчастей" (Supplier).
- * Выполнен пункт 4: статические методы валидации всех необходимых полей.
- * Существование объекта с невалидными данными невозможно (бросаются исключения).
+ * Выполнен пункт 5: устранение дублирования кода валидации (делегирование в ValidationUtils).
  */
 public class Supplier {
 
@@ -18,9 +17,15 @@ public class Supplier {
     private String address;
     private String contactPerson;
 
+    // Регулярные выражения (константы) для валидации
+    private static final String INN_REGEX = "^\\d{10}$|^\\d{12}$";
+    private static final String OGRN_REGEX = "^\\d{13}$|^\\d{15}$";
+    private static final String PHONE_REGEX = "^(\\+7|8)[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-]?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$";
+    private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
+    private static final String CONTACT_PERSON_REGEX = "^[А-Яа-яЁёA-Za-z\\s\\-]{3,150}$";
+
     /**
      * Полный конструктор для инициализации всех полей сущности.
-     * При передаче любого невалидного поля выбрасывается IllegalArgumentException.
      */
     public Supplier(int id, String name, String inn, String ogrn,
                     String phone, String email, String address, String contactPerson) {
@@ -35,7 +40,7 @@ public class Supplier {
     }
 
     // =============================================================
-    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ (МЕТОДЫ КЛАССА)
+    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ (БЕЗ ДУБЛИРОВАНИЯ КОДА)
     // =============================================================
 
     public static boolean validateId(int id) {
@@ -43,59 +48,31 @@ public class Supplier {
     }
 
     public static boolean validateName(String name) {
-        if (name == null || name.trim().isEmpty()) {
-            return false;
-        }
-        return name.trim().length() >= 2 && name.trim().length() <= 255;
+        return ValidationUtils.checkLength(name, 2, 255);
     }
 
     public static boolean validateInn(String inn) {
-        if (inn == null || inn.trim().isEmpty()) {
-            return false;
-        }
-        // ИНН юрлица состоит из 10 цифр, ИНН ИП из 12 цифр
-        return Pattern.matches("^\\d{10}$|^\\d{12}$", inn.trim());
+        return ValidationUtils.matchesRegex(inn, INN_REGEX);
     }
 
     public static boolean validateOgrn(String ogrn) {
-        if (ogrn == null || ogrn.trim().isEmpty()) {
-            return false;
-        }
-        // ОГРН юрлица 13 цифр, ОГРНИП 15 цифр
-        return Pattern.matches("^\\d{13}$|^\\d{15}$", ogrn.trim());
+        return ValidationUtils.matchesRegex(ogrn, OGRN_REGEX);
     }
 
     public static boolean validatePhone(String phone) {
-        if (phone == null || phone.trim().isEmpty()) {
-            return false;
-        }
-        // Телефон формата РФ: +7/8 с кодом и разделителями или 11 цифр
-        String regex = "^(\\+7|8)[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-]?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$";
-        return Pattern.matches(regex, phone.trim());
+        return ValidationUtils.matchesRegex(phone, PHONE_REGEX);
     }
 
     public static boolean validateEmail(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            return false;
-        }
-        String regex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
-        return Pattern.matches(regex, email.trim());
+        return ValidationUtils.matchesRegex(email, EMAIL_REGEX);
     }
 
     public static boolean validateAddress(String address) {
-        if (address == null || address.trim().isEmpty()) {
-            return false;
-        }
-        return address.trim().length() >= 5 && address.trim().length() <= 300;
+        return ValidationUtils.checkLength(address, 5, 300);
     }
 
     public static boolean validateContactPerson(String contactPerson) {
-        if (contactPerson == null || contactPerson.trim().isEmpty()) {
-            return false;
-        }
-        // ФИО на кириллице или латинице, дефис для двойных фамилий
-        String regex = "^[А-Яа-яЁёA-Za-z\\s\\-]+$";
-        return Pattern.matches(regex, contactPerson.trim()) && contactPerson.trim().length() >= 3;
+        return ValidationUtils.matchesRegex(contactPerson, CONTACT_PERSON_REGEX);
     }
 
     // =============================================================
