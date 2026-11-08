@@ -9,49 +9,54 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Класс, представляющий сущность "Поставщик автозапчастей" (Supplier).
- * Выполнен пункт 7: строковое представление (полное и краткое), сравнение на равенство (equals и hashCode).
+ * Класс, представляющий полную сущность "Поставщик автозапчастей" (Supplier).
+ * Выполнен пункт 9: объединение Supplier и SupplierShort в единую иерархию наследования.
+ * Supplier наследуется от SupplierShort (extends), устраняя повтор кода:
+ * общие поля (id, name, inn, phone), их валидация и методы доступа вынесены в базовый класс.
  */
-public class Supplier {
+public class Supplier extends SupplierShort {
 
-    private int id;
-    private String name;
-    private String inn;
+    // Специфичные поля полного класса (наследуемые id, name, inn, phone объявлены в предке)
     private String ogrn;
-    private String phone;
     private String email;
     private String address;
     private String contactPerson;
 
-    // Регулярные выражения (константы) для валидации
-    private static final String INN_REGEX = "^\\d{10}$|^\\d{12}$";
+    // Регулярные выражения для валидации специфичных полей
     private static final String OGRN_REGEX = "^\\d{13}$|^\\d{15}$";
-    private static final String PHONE_REGEX = "^(\\+7|8)[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-]?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
     private static final String CONTACT_PERSON_REGEX = "^[А-Яа-яЁёA-Za-z\\s\\-]{3,150}$";
 
     /**
-     * Конструктор 1 (полный): инициализация объекта через явную передачу всех аргументов.
+     * Конструктор 1 (полный):
+     * Вызывает конструктор суперкласса super(id, name, inn, phone) для инициализации общих полей,
+     * исключая дублирование кода инициализации.
      */
     public Supplier(int id, String name, String inn, String ogrn,
                     String phone, String email, String address, String contactPerson) {
-        setId(id);
-        setName(name);
-        setInn(inn);
+        super(id, name, inn, phone);
         setOgrn(ogrn);
-        setPhone(phone);
         setEmail(email);
         setAddress(address);
         setContactPerson(contactPerson);
     }
 
     /**
-     * Конструктор 2 (перегрузка для нетривиальных форматов):
+     * Конструктор 2: создание на основе краткой версии SupplierShort и дополнительных данных.
+     */
+    public Supplier(SupplierShort supplierShort, String ogrn, String email, String address, String contactPerson) {
+        this(supplierShort.getId(), supplierShort.getName(), supplierShort.getInn(), ogrn,
+                supplierShort.getPhone(), email, address, contactPerson);
+    }
+
+    /**
+     * Конструктор 3 (перегрузка для нетривиальных форматов):
      * Создает объект из строки данных (автоматически определяет CSV или JSON формат).
      */
     public Supplier(String data) {
+        super(1, "Временное имя", "0000000000", "+79990000000"); // вызов super для компилятора
         if (data == null || data.trim().isEmpty()) {
-            throw new IllegalArgumentException("Ошибка: переданная строка данных не может быть пустой.");
+            throw new IllegalArgumentException("Ошибка: строка данных не может быть пустой.");
         }
         String trimmed = data.trim();
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
@@ -61,7 +66,7 @@ public class Supplier {
         }
     }
 
-    // --- Вспомогательные методы парсинга ---
+    // --- Парсинг данных ---
 
     private void initFromCsv(String csvLine) {
         String[] parts = csvLine.split(";");
@@ -71,7 +76,7 @@ public class Supplier {
         try {
             setId(Integer.parseInt(parts[0].trim()));
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Ошибка CSV: не удалось преобразовать ID в число: " + parts[0]);
+            throw new IllegalArgumentException("Ошибка CSV: некорректный ID: " + parts[0]);
         }
         setName(parts[1].trim());
         setInn(parts[2].trim());
@@ -116,76 +121,12 @@ public class Supplier {
     }
 
     // =============================================================
-    // ПРЕДСТАВЛЕНИЕ ОБЪЕКТА (ПОЛНАЯ И КРАТКАЯ ВЕРСИИ)
+    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ СПЕЦИФИЧНЫХ ПОЛЕЙ
+    // (валидаторы id, name, inn, phone унаследованы из SupplierShort)
     // =============================================================
-
-    /**
-     * Полная версия представления объекта.
-     */
-    @Override
-    public String toString() {
-        return "=== Поставщик [ID: " + id + "] ===\n" +
-                "  Название        : " + name + "\n" +
-                "  ИНН             : " + inn + "\n" +
-                "  ОГРН            : " + ogrn + "\n" +
-                "  Телефон         : " + phone + "\n" +
-                "  Email           : " + email + "\n" +
-                "  Адрес           : " + address + "\n" +
-                "  Контактное лицо : " + contactPerson;
-    }
-
-    /**
-     * Краткая версия представления объекта.
-     */
-    public String toShortString() {
-        return String.format("[#%d] %s | ИНН: %s | Тел: %s", id, name, inn, phone);
-    }
-
-    // =============================================================
-    // СРАВНЕНИЕ ОБЪЕКТОВ НА РАВЕНСТВО
-    // =============================================================
-
-    /**
-     * Сравнение двух поставщиков на равенство по уникальным полям (id и inn).
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Supplier supplier = (Supplier) o;
-        return id == supplier.id && Objects.equals(inn, supplier.inn);
-    }
-
-    /**
-     * Хэш-код объекта на основе полей id и inn (согласован с equals).
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, inn);
-    }
-
-    // =============================================================
-    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ
-    // =============================================================
-
-    public static boolean validateId(int id) {
-        return id > 0;
-    }
-
-    public static boolean validateName(String name) {
-        return ValidationUtils.checkLength(name, 2, 255);
-    }
-
-    public static boolean validateInn(String inn) {
-        return ValidationUtils.matchesRegex(inn, INN_REGEX);
-    }
 
     public static boolean validateOgrn(String ogrn) {
         return ValidationUtils.matchesRegex(ogrn, OGRN_REGEX);
-    }
-
-    public static boolean validatePhone(String phone) {
-        return ValidationUtils.matchesRegex(phone, PHONE_REGEX);
     }
 
     public static boolean validateEmail(String email) {
@@ -201,41 +142,8 @@ public class Supplier {
     }
 
     // =============================================================
-    // ГЕТТЕРЫ И СЕТТЕРЫ
+    // ГЕТТЕРЫ И СЕТТЕРЫ СПЕЦИФИЧНЫХ ПОЛЕЙ
     // =============================================================
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        if (!validateId(id)) {
-            throw new IllegalArgumentException("Ошибка: ID поставщика должен быть положительным числом (> 0). Получено: " + id);
-        }
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        if (!validateName(name)) {
-            throw new IllegalArgumentException("Ошибка: некорректное наименование поставщика (длина от 2 до 255 символов).");
-        }
-        this.name = name.trim();
-    }
-
-    public String getInn() {
-        return inn;
-    }
-
-    public void setInn(String inn) {
-        if (!validateInn(inn)) {
-            throw new IllegalArgumentException("Ошибка: некорректный ИНН (должен содержать 10 или 12 цифр). Получено: " + inn);
-        }
-        this.inn = inn.trim();
-    }
 
     public String getOgrn() {
         return ogrn;
@@ -243,20 +151,9 @@ public class Supplier {
 
     public void setOgrn(String ogrn) {
         if (!validateOgrn(ogrn)) {
-            throw new IllegalArgumentException("Ошибка: некорректный ОГРН (должен содержать 13 или 15 цифр). Получено: " + ogrn);
+            throw new IllegalArgumentException("Ошибка: некорректный ОГРН (13 или 15 цифр). Получено: " + ogrn);
         }
         this.ogrn = ogrn.trim();
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        if (!validatePhone(phone)) {
-            throw new IllegalArgumentException("Ошибка: некорректный формат номера телефона. Получено: " + phone);
-        }
-        this.phone = phone.trim();
     }
 
     public String getEmail() {
@@ -290,5 +187,43 @@ public class Supplier {
             throw new IllegalArgumentException("Ошибка: некорректное ФИО контактного лица. Получено: " + contactPerson);
         }
         this.contactPerson = contactPerson.trim();
+    }
+
+    // =============================================================
+    // ПРЕДСТАВЛЕНИЕ ОБЪЕКТА И СРАВНЕНИЕ
+    // =============================================================
+
+    /**
+     * Полная версия представления объекта.
+     */
+    @Override
+    public String toString() {
+        return "=== Поставщик [ID: " + getId() + "] ===\n" +
+                "  Название        : " + getName() + "\n" +
+                "  ИНН             : " + getInn() + "\n" +
+                "  ОГРН            : " + ogrn + "\n" +
+                "  Телефон         : " + getPhone() + "\n" +
+                "  Email           : " + email + "\n" +
+                "  Адрес           : " + address + "\n" +
+                "  Контактное лицо : " + contactPerson;
+    }
+
+    /**
+     * Краткая версия представления: использует метод суперкласса.
+     */
+    public String toShortString() {
+        return super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        Supplier supplier = (Supplier) o;
+        return Objects.equals(ogrn, supplier.ogrn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), ogrn);
     }
 }

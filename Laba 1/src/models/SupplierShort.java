@@ -5,12 +5,13 @@ import utils.ValidationUtils;
 import java.util.Objects;
 
 /**
- * Класс, содержащий краткую версию данных сущности "Поставщик" (SupplierShort).
- * Выполнен пункт 8: отдельный легковесный класс (ID, Название, ИНН, один контактный телефон)
- * без адреса, email и контактных лиц.
+ * Базовый класс, содержащий краткую версию данных сущности "Поставщик" (SupplierShort).
+ * Выполнены пункты 8 и 9: содержит базовые общие поля, их валидацию, геттеры/сеттеры
+ * и служит суперклассом для полного Supplier.
  */
 public class SupplierShort {
 
+    // Защищенные поля доступны в классе-наследнике Supplier
     protected int id;
     protected String name;
     protected String inn;
@@ -30,17 +31,17 @@ public class SupplierShort {
     }
 
     /**
-     * Конструктор 2: создание краткой версии на основе полного объекта Supplier.
-     * Позволяет удобно проецировать полный объект в легковесную модель.
+     * Конструктор 2 (копирующий): создание краткой версии на основе другого объекта SupplierShort
+     * или его наследника Supplier (благодаря полиморфизму).
      */
-    public SupplierShort(Supplier supplier) {
-        if (supplier == null) {
+    public SupplierShort(SupplierShort other) {
+        if (other == null) {
             throw new IllegalArgumentException("Ошибка: объект поставщика не может быть null.");
         }
-        setId(supplier.getId());
-        setName(supplier.getName());
-        setInn(supplier.getInn());
-        setPhone(supplier.getPhone());
+        setId(other.getId());
+        setName(other.getName());
+        setInn(other.getInn());
+        setPhone(other.getPhone());
     }
 
     /**
