@@ -1,7 +1,8 @@
 import models.Client;
+import models.ClientShort;
 
 /**
- * Главный класс для демонстрации работы с сущностью Client.
+ * Главный класс для демонстрации работы с сущностями Client и ClientShort.
  */
 public class Main {
     public static void main(String[] args) {
@@ -9,7 +10,7 @@ public class Main {
         System.out.println("Вариант 7: Нотариальная контора");
         System.out.println("Студент: Дражин Н.О.\n");
 
-        Client c1 = new Client(
+        Client fullClient = new Client(
                 1,
                 "ООО \"СтройИнвест\"",
                 "Строительство",
@@ -20,33 +21,19 @@ public class Main {
                 "Иванов Иван Иванович"
         );
 
-        Client c2 = new Client("2;АО \"КубаньАгро\";Сельское хозяйство;+7 (861) 222-33-44;г. Краснодар, ул. Северная, д. 45;2311987654;agro@kuban.ru;Сидоров Алексей");
+        // Создание ClientShort из полного объекта Client
+        ClientShort shortFromFull = new ClientShort(fullClient.getId(), fullClient.getName(), fullClient.getActivityType(), fullClient.getPhone());
 
-        Client c1Duplicate = new Client(
-                1,
-                "ООО \"СтройИнвест Групп\"",
-                "Девелопмент",
-                "+7 (999) 123-45-67",
-                "г. Краснодар, ул. Красная, д. 120",
-                "2310123456",
-                "sales@stroyinvest.ru",
-                "Петров Петр"
-        );
+        // Создание ClientShort напрямую через конструктор
+        ClientShort shortDirect = new ClientShort(2, "АО \"КубаньАгро\"", "Сельское хозяйство", "+7 (861) 222-33-44");
 
-        // 1. Вывод полной версии объекта
-        System.out.println("1. ПОЛНАЯ ВЕРСИЯ ОБЪЕКТА (toString):");
-        System.out.println(c1);
+        // Создание ClientShort из краткой строки
+        ClientShort shortFromString = new ClientShort("3;ООО \"АйтиСофт\";Разработка ПО;88005553535");
 
-        // 2. Вывод краткой версии объекта
-        System.out.println("\n2. КРАТКАЯ ВЕРСИЯ ОБЪЕКТА (toShortString):");
-        System.out.println(c1.toShortString());
-        System.out.println(c2.toShortString());
-
-        // 3. Сравнение объектов на равенство
-        System.out.println("\n3. СРАВНЕНИЕ ОБЪЕКТОВ НА РАВЕНСТВО (equals):");
-        System.out.println("   c1 равен c1Duplicate (одинаковые ID и ИНН)? -> " + c1.equals(c1Duplicate));
-        System.out.println("   c1 равен c2? -> " + c1.equals(c2));
-        System.out.println("   hashCode c1: " + c1.hashCode());
-        System.out.println("   hashCode c1Duplicate: " + c1Duplicate.hashCode());
+        System.out.println("1. ПОЛНЫЙ ОБЪЕКТ CLIENT:\n" + fullClient);
+        System.out.println("\n2. КРАТКИЕ ОБЪЕКТЫ CLIENTSHORT:");
+        System.out.println("   Из полного объекта : " + shortFromFull);
+        System.out.println("   Через конструктор  : " + shortDirect);
+        System.out.println("   Из краткой строки  : " + shortFromString);
     }
 }
