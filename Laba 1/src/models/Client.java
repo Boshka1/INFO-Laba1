@@ -9,35 +9,32 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Класс, представляющий сущность "Клиент нотариальной конторы" (Client).
- * Выполнен пункт 7: строковое представление (полное и краткое), сравнение на равенство (equals и hashCode).
+ * Класс, представляющий полную сущность "Клиент нотариальной конторы" (Client).
+ * Выполнен пункт 9: объединение Client и ClientShort в единую иерархию наследования.
+ * Client наследуется от ClientShort (extends), устраняя повтор кода:
+ * общие поля (id, name, activityType, phone), их валидация и методы доступа вынесены в базовый класс.
  */
-public class Client {
+public class Client extends ClientShort {
 
-    private int id;
-    private String name;
-    private String activityType;
-    private String phone;
+    // Специфичные поля полного класса (наследуемые id, name, activityType, phone объявлены в предке)
     private String address;
     private String inn;
     private String email;
     private String contactPerson;
 
-    // Регулярные выражения (константы) для валидации
-    private static final String PHONE_REGEX = "^(\\+7|8)[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-]?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$";
+    // Регулярные выражения для валидации специфичных полей
     private static final String INN_REGEX = "^\\d{10}$|^\\d{12}$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$";
     private static final String CONTACT_PERSON_REGEX = "^[А-Яа-яЁёA-Za-z\\s\\-]{3,150}$";
 
     /**
-     * Конструктор 1 (полный): инициализация объекта через явную передачу всех аргументов.
+     * Конструктор 1 (полный):
+     * Вызывает конструктор суперкласса super(id, name, activityType, phone) для инициализации общих полей,
+     * исключая дублирование кода инициализации.
      */
     public Client(int id, String name, String activityType, String phone,
                   String address, String inn, String email, String contactPerson) {
-        setId(id);
-        setName(name);
-        setActivityType(activityType);
-        setPhone(phone);
+        super(id, name, activityType, phone);
         setAddress(address);
         setInn(inn);
         setEmail(email);
@@ -45,12 +42,21 @@ public class Client {
     }
 
     /**
-     * Конструктор 2 (перегрузка для нетривиальных форматов):
+     * Конструктор 2: создание на основе краткой версии ClientShort и дополнительных данных.
+     */
+    public Client(ClientShort clientShort, String address, String inn, String email, String contactPerson) {
+        this(clientShort.getId(), clientShort.getName(), clientShort.getActivityType(), clientShort.getPhone(),
+                address, inn, email, contactPerson);
+    }
+
+    /**
+     * Конструктор 3 (перегрузка для нетривиальных форматов):
      * Создает объект из строки данных (автоматически определяет CSV или JSON формат).
      */
     public Client(String data) {
+        super(1, "Временное имя", "Деятельность", "+79990000000"); // вызов super для компилятора
         if (data == null || data.trim().isEmpty()) {
-            throw new IllegalArgumentException("Ошибка: переданная строка данных не может быть пустой.");
+            throw new IllegalArgumentException("Ошибка: строка данных не может быть пустой.");
         }
         String trimmed = data.trim();
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
@@ -60,7 +66,7 @@ public class Client {
         }
     }
 
-    // --- Вспомогательные методы парсинга ---
+    // --- Парсинг данных ---
 
     private void initFromCsv(String csvLine) {
         String[] parts = csvLine.split(";");
@@ -70,7 +76,7 @@ public class Client {
         try {
             setId(Integer.parseInt(parts[0].trim()));
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Ошибка CSV: не удалось преобразовать ID в число: " + parts[0]);
+            throw new IllegalArgumentException("Ошибка CSV: некорректный ID: " + parts[0]);
         }
         setName(parts[1].trim());
         setActivityType(parts[2].trim());
@@ -115,73 +121,9 @@ public class Client {
     }
 
     // =============================================================
-    // ПРЕДСТАВЛЕНИЕ ОБЪЕКТА (ПОЛНАЯ И КРАТКАЯ ВЕРСИИ)
+    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ СПЕЦИФИЧНЫХ ПОЛЕЙ
+    // (методы validateId, validateName, validateActivityType, validatePhone унаследованы из ClientShort)
     // =============================================================
-
-    /**
-     * Полная версия представления объекта.
-     */
-    @Override
-    public String toString() {
-        return "=== Клиент [ID: " + id + "] ===\n" +
-                "  Название        : " + name + "\n" +
-                "  Вид деятельности: " + activityType + "\n" +
-                "  Телефон         : " + phone + "\n" +
-                "  Адрес           : " + address + "\n" +
-                "  ИНН             : " + inn + "\n" +
-                "  Email           : " + email + "\n" +
-                "  Контактное лицо : " + contactPerson;
-    }
-
-    /**
-     * Краткая версия представления объекта.
-     */
-    public String toShortString() {
-        return String.format("[#%d] %s | %s | Тел: %s", id, name, activityType, phone);
-    }
-
-    // =============================================================
-    // СРАВНЕНИЕ ОБЪЕКТОВ НА РАВЕНСТВО
-    // =============================================================
-
-    /**
-     * Сравнение двух клиентов на равенство по уникальным полям (id и inn).
-     */
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Client client = (Client) o;
-        return id == client.id && Objects.equals(inn, client.inn);
-    }
-
-    /**
-     * Хэш-код объекта на основе полей id и inn (согласован с equals).
-     */
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, inn);
-    }
-
-    // =============================================================
-    // СТАТИЧЕСКИЕ МЕТОДЫ ВАЛИДАЦИИ
-    // =============================================================
-
-    public static boolean validateId(int id) {
-        return id > 0;
-    }
-
-    public static boolean validateName(String name) {
-        return ValidationUtils.checkLength(name, 2, 255);
-    }
-
-    public static boolean validateActivityType(String activityType) {
-        return ValidationUtils.checkLength(activityType, 2, 150);
-    }
-
-    public static boolean validatePhone(String phone) {
-        return ValidationUtils.matchesRegex(phone, PHONE_REGEX);
-    }
 
     public static boolean validateAddress(String address) {
         return ValidationUtils.checkLength(address, 5, 300);
@@ -200,52 +142,8 @@ public class Client {
     }
 
     // =============================================================
-    // ГЕТТЕРЫ И СЕТТЕРЫ
+    // ГЕТТЕРЫ И СЕТТЕРЫ СПЕЦИФИЧНЫХ ПОЛЕЙ
     // =============================================================
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        if (!validateId(id)) {
-            throw new IllegalArgumentException("Ошибка: ID клиента должен быть положительным числом (> 0). Получено: " + id);
-        }
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        if (!validateName(name)) {
-            throw new IllegalArgumentException("Ошибка: некорректное наименование клиента (длина от 2 до 255 символов).");
-        }
-        this.name = name.trim();
-    }
-
-    public String getActivityType() {
-        return activityType;
-    }
-
-    public void setActivityType(String activityType) {
-        if (!validateActivityType(activityType)) {
-            throw new IllegalArgumentException("Ошибка: некорректный вид деятельности (от 2 до 150 символов).");
-        }
-        this.activityType = activityType.trim();
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        if (!validatePhone(phone)) {
-            throw new IllegalArgumentException("Ошибка: некорректный номер телефона. Получено: " + phone);
-        }
-        this.phone = phone.trim();
-    }
 
     public String getAddress() {
         return address;
@@ -289,5 +187,43 @@ public class Client {
             throw new IllegalArgumentException("Ошибка: некорректное ФИО контактного лица. Получено: " + contactPerson);
         }
         this.contactPerson = contactPerson.trim();
+    }
+
+    // =============================================================
+    // ПРЕДСТАВЛЕНИЕ ОБЪЕКТА И СРАВНЕНИЕ
+    // =============================================================
+
+    /**
+     * Полная версия представления объекта.
+     */
+    @Override
+    public String toString() {
+        return "=== Клиент [ID: " + getId() + "] ===\n" +
+                "  Название        : " + getName() + "\n" +
+                "  Вид деятельности: " + getActivityType() + "\n" +
+                "  Телефон         : " + getPhone() + "\n" +
+                "  Адрес           : " + address + "\n" +
+                "  ИНН             : " + inn + "\n" +
+                "  Email           : " + email + "\n" +
+                "  Контактное лицо : " + contactPerson;
+    }
+
+    /**
+     * Краткая версия представления: использует метод суперкласса.
+     */
+    public String toShortString() {
+        return super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        Client client = (Client) o;
+        return Objects.equals(inn, client.inn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), inn);
     }
 }

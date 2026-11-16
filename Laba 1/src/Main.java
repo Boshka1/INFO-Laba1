@@ -2,7 +2,7 @@ import models.Client;
 import models.ClientShort;
 
 /**
- * Главный класс для демонстрации работы с сущностями Client и ClientShort.
+ * Главный класс для демонстрации работы с иерархией наследования (Client extends ClientShort).
  */
 public class Main {
     public static void main(String[] args) {
@@ -10,6 +10,7 @@ public class Main {
         System.out.println("Вариант 7: Нотариальная контора");
         System.out.println("Студент: Дражин Н.О.\n");
 
+        // 1. Создание полного объекта Client (наследник)
         Client fullClient = new Client(
                 1,
                 "ООО \"СтройИнвест\"",
@@ -21,19 +22,33 @@ public class Main {
                 "Иванов Иван Иванович"
         );
 
-        // Создание ClientShort из полного объекта Client
-        ClientShort shortFromFull = new ClientShort(fullClient.getId(), fullClient.getName(), fullClient.getActivityType(), fullClient.getPhone());
+        // 2. Создание краткого объекта ClientShort (базовый класс) из полного
+        ClientShort shortFromFull = new ClientShort(fullClient);
 
-        // Создание ClientShort напрямую через конструктор
-        ClientShort shortDirect = new ClientShort(2, "АО \"КубаньАгро\"", "Сельское хозяйство", "+7 (861) 222-33-44");
+        // 3. Создание полного объекта на базе краткого (расширение)
+        Client extendedClient = new Client(
+                shortFromFull,
+                "г. Краснодар, ул. Северная, д. 10",
+                "2310123456",
+                "support@stroyinvest.ru",
+                "Смирнова Анна"
+        );
 
-        // Создание ClientShort из краткой строки
-        ClientShort shortFromString = new ClientShort("3;ООО \"АйтиСофт\";Разработка ПО;88005553535");
+        System.out.println("1. ДЕМОНСТРАЦИЯ ИЕРАРХИИ НАСЛЕДОВАНИЯ:");
+        System.out.println("   Класс-родитель : " + ClientShort.class.getSimpleName());
+        System.out.println("   Класс-наследник: " + Client.class.getSimpleName());
+        System.out.println("   Client является экземпляром ClientShort? " + (fullClient instanceof ClientShort));
 
-        System.out.println("1. ПОЛНЫЙ ОБЪЕКТ CLIENT:\n" + fullClient);
-        System.out.println("\n2. КРАТКИЕ ОБЪЕКТЫ CLIENTSHORT:");
-        System.out.println("   Из полного объекта : " + shortFromFull);
-        System.out.println("   Через конструктор  : " + shortDirect);
-        System.out.println("   Из краткой строки  : " + shortFromString);
+        System.out.println("\n2. ПОЛНОЕ ПРЕДСТАВЛЕНИЕ ОБЪЕКТА:");
+        System.out.println(fullClient);
+
+        System.out.println("\n3. КРАТКОЕ ПРЕДСТАВЛЕНИЕ ОБЪЕКТА (toShortString):");
+        System.out.println("   " + fullClient.toShortString());
+
+        System.out.println("\n4. ПРЕДСТАВЛЕНИЕ ОБЪЕКТА CLIENTSHORT:");
+        System.out.println("   " + shortFromFull);
+
+        System.out.println("\n5. ОБЪЕКТ, СОЗДАННЫЙ РАСШИРЕНИЕМ КРАТКОЙ ВЕРСИИ:");
+        System.out.println(extendedClient);
     }
 }
