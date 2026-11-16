@@ -4,12 +4,13 @@ import utils.ValidationUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Класс, представляющий сущность "Клиент нотариальной конторы" (Client).
- * Выполнен пункт 6: перегрузка конструкторов для нетривиальных примеров (строка CSV, JSON).
+ * Выполнен пункт 7: строковое представление (полное и краткое), сравнение на равенство (equals и hashCode).
  */
 public class Client {
 
@@ -59,7 +60,7 @@ public class Client {
         }
     }
 
-    // --- Вспомогательные методы парсинга для перегруженных конструкторов ---
+    // --- Вспомогательные методы парсинга ---
 
     private void initFromCsv(String csvLine) {
         String[] parts = csvLine.split(";");
@@ -111,6 +112,55 @@ public class Client {
             map.put(key, value);
         }
         return map;
+    }
+
+    // =============================================================
+    // ПРЕДСТАВЛЕНИЕ ОБЪЕКТА (ПОЛНАЯ И КРАТКАЯ ВЕРСИИ)
+    // =============================================================
+
+    /**
+     * Полная версия представления объекта.
+     */
+    @Override
+    public String toString() {
+        return "=== Клиент [ID: " + id + "] ===\n" +
+                "  Название        : " + name + "\n" +
+                "  Вид деятельности: " + activityType + "\n" +
+                "  Телефон         : " + phone + "\n" +
+                "  Адрес           : " + address + "\n" +
+                "  ИНН             : " + inn + "\n" +
+                "  Email           : " + email + "\n" +
+                "  Контактное лицо : " + contactPerson;
+    }
+
+    /**
+     * Краткая версия представления объекта.
+     */
+    public String toShortString() {
+        return String.format("[#%d] %s | %s | Тел: %s", id, name, activityType, phone);
+    }
+
+    // =============================================================
+    // СРАВНЕНИЕ ОБЪЕКТОВ НА РАВЕНСТВО
+    // =============================================================
+
+    /**
+     * Сравнение двух клиентов на равенство по уникальным полям (id и inn).
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Client client = (Client) o;
+        return id == client.id && Objects.equals(inn, client.inn);
+    }
+
+    /**
+     * Хэш-код объекта на основе полей id и inn (согласован с equals).
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, inn);
     }
 
     // =============================================================

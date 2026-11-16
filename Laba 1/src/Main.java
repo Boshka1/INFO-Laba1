@@ -9,7 +9,6 @@ public class Main {
         System.out.println("Вариант 7: Нотариальная контора");
         System.out.println("Студент: Дражин Н.О.\n");
 
-        // 1. Создание через базовый полный конструктор
         Client c1 = new Client(
                 1,
                 "ООО \"СтройИнвест\"",
@@ -20,25 +19,34 @@ public class Main {
                 "info@stroyinvest.ru",
                 "Иванов Иван Иванович"
         );
-        System.out.println("1. Создан через полный конструктор: " + c1.getName() + " (ID: " + c1.getId() + ")");
 
-        // 2. Создание через перегруженный конструктор из строки CSV
-        String csv = "2;АО \"КубаньАгро\";Сельское хозяйство;+7 (861) 222-33-44;г. Краснодар, ул. Северная, д. 45;2311987654;agro@kuban.ru;Сидоров Алексей";
-        Client c2 = new Client(csv);
-        System.out.println("2. Создан через перегрузку (CSV строка): " + c2.getName() + " (ИНН: " + c2.getInn() + ")");
+        Client c2 = new Client("2;АО \"КубаньАгро\";Сельское хозяйство;+7 (861) 222-33-44;г. Краснодар, ул. Северная, д. 45;2311987654;agro@kuban.ru;Сидоров Алексей");
 
-        // 3. Создание через перегруженный конструктор из строки JSON
-        String json = "{"
-                + "\"id\": 3,"
-                + "\"name\": \"ООО \\\"АйтиСофт\\\"\","
-                + "\"activityType\": \"Разработка ПО\","
-                + "\"phone\": \"88005553535\","
-                + "\"address\": \"г. Москва, Варшавское шоссе, д. 1\","
-                + "\"inn\": \"7701987654\","
-                + "\"email\": \"support@itsoft.ru\","
-                + "\"contactPerson\": \"Васильев Николай\""
-                + "}";
-        Client c3 = new Client(json);
-        System.out.println("3. Создан через перегрузку (JSON строка): " + c3.getName() + " (Email: " + c3.getEmail() + ")");
+        Client c1Duplicate = new Client(
+                1,
+                "ООО \"СтройИнвест Групп\"",
+                "Девелопмент",
+                "+7 (999) 123-45-67",
+                "г. Краснодар, ул. Красная, д. 120",
+                "2310123456",
+                "sales@stroyinvest.ru",
+                "Петров Петр"
+        );
+
+        // 1. Вывод полной версии объекта
+        System.out.println("1. ПОЛНАЯ ВЕРСИЯ ОБЪЕКТА (toString):");
+        System.out.println(c1);
+
+        // 2. Вывод краткой версии объекта
+        System.out.println("\n2. КРАТКАЯ ВЕРСИЯ ОБЪЕКТА (toShortString):");
+        System.out.println(c1.toShortString());
+        System.out.println(c2.toShortString());
+
+        // 3. Сравнение объектов на равенство
+        System.out.println("\n3. СРАВНЕНИЕ ОБЪЕКТОВ НА РАВЕНСТВО (equals):");
+        System.out.println("   c1 равен c1Duplicate (одинаковые ID и ИНН)? -> " + c1.equals(c1Duplicate));
+        System.out.println("   c1 равен c2? -> " + c1.equals(c2));
+        System.out.println("   hashCode c1: " + c1.hashCode());
+        System.out.println("   hashCode c1Duplicate: " + c1Duplicate.hashCode());
     }
 }
