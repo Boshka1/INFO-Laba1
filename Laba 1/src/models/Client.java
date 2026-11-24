@@ -2,6 +2,11 @@ package models;
 
 import utils.ValidationUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 public class Client {
 
     private int id;
@@ -17,6 +22,9 @@ public class Client {
     private static final String INN_REGEX = "^\\d{10}$|^\\d{12}$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String CONTACT_PERSON_REGEX = "^[А-Яа-яЁёA-Za-z\\s\\-]{3,150}$";
+    private static final Pattern JSON_FIELD_PATTERN = Pattern.compile(
+            "\"([^\"]+)\"\\s*:\\s*(?:\"((?:\\\\.|[^\"\\\\])*)\"|(-?\\d+))"
+    );
 
     public Client(int id, String name, String activityType, String phone,
                   String address, String inn, String email, String contactPerson) {
@@ -28,6 +36,74 @@ public class Client {
         setInn(inn);
         setEmail(email);
         setContactPerson(contactPerson);
+    }
+
+    public Client(String data) {
+        this(parseData(data));
+    }
+
+    private Client(String[] fields) {
+        this(parseId(fields[0]), fields[1], fields[2], fields[3],
+                fields[4], fields[5], fields[6], fields[7]);
+    }
+
+    private static String[] parseData(String data) {
+        if (ValidationUtils.isBlank(data)) {
+            throw new IllegalArgumentException("Ошибка: строка данных не может быть пустой.");
+        }
+        String trimmed = data.trim();
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            return parseJson(trimmed);
+        }
+        return parseCsv(trimmed);
+    }
+
+    private static String[] parseCsv(String csvLine) {
+        String[] parts = csvLine.split(";", -1);
+        if (parts.length != 8) {
+            throw new IllegalArgumentException("Ошибка CSV: ожидалось 8 полей через ';', получено: " + parts.length);
+        }
+        for (int i = 0; i < parts.length; i++) {
+            parts[i] = parts[i].trim();
+        }
+        return parts;
+    }
+
+    private static String[] parseJson(String json) {
+        Map<String, String> map = parseSimpleJson(json);
+        String[] requiredKeys = {"id", "name", "activityType", "phone", "address", "inn", "email", "contactPerson"};
+        String[] values = new String[requiredKeys.length];
+        for (int i = 0; i < requiredKeys.length; i++) {
+            String value = map.get(requiredKeys[i]);
+            if (value == null) {
+                throw new IllegalArgumentException("Ошибка JSON: отсутствует обязательный ключ '" + requiredKeys[i] + "'.");
+            }
+            values[i] = value.trim();
+        }
+        return values;
+    }
+
+    private static Map<String, String> parseSimpleJson(String json) {
+        Map<String, String> map = new HashMap<>();
+        Matcher matcher = JSON_FIELD_PATTERN.matcher(json);
+        while (matcher.find()) {
+            String key = matcher.group(1);
+            String value = matcher.group(2) != null ? unescapeJson(matcher.group(2)) : matcher.group(3);
+            map.put(key, value);
+        }
+        return map;
+    }
+
+    private static String unescapeJson(String value) {
+        return value.replace("\\\"", "\"").replace("\\\\", "\\");
+    }
+
+    private static int parseId(String rawId) {
+        try {
+            return Integer.parseInt(rawId.trim());
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Ошибка: некорректный ID: " + rawId);
+        }
     }
 
     public static boolean validateId(int id) {
