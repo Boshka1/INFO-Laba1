@@ -4,6 +4,7 @@ import utils.ValidationUtils;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -104,6 +105,35 @@ public class Client {
         } catch (NumberFormatException e) {
             throw new IllegalArgumentException("Ошибка: некорректный ID: " + rawId);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "=== Клиент [ID: " + id + "] ===\n" +
+                "  Название        : " + name + "\n" +
+                "  Вид деятельности: " + activityType + "\n" +
+                "  Телефон         : " + phone + "\n" +
+                "  Адрес           : " + address + "\n" +
+                "  ИНН             : " + inn + "\n" +
+                "  Email           : " + email + "\n" +
+                "  Контактное лицо : " + contactPerson;
+    }
+
+    public String toShortString() {
+        return String.format("[#%d] %s | %s | Тел: %s", id, name, activityType, phone);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Client client = (Client) o;
+        return id == client.id && Objects.equals(inn, client.inn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, inn);
     }
 
     public static boolean validateId(int id) {
