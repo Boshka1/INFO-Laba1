@@ -8,18 +8,13 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Client {
+public class Client extends ClientShort {
 
-    private int id;
-    private String name;
-    private String activityType;
-    private String phone;
     private String address;
     private String inn;
     private String email;
     private String contactPerson;
 
-    private static final String PHONE_REGEX = "^(\\+7|8)[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-]?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$";
     private static final String INN_REGEX = "^\\d{10}$|^\\d{12}$";
     private static final String EMAIL_REGEX = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
     private static final String CONTACT_PERSON_REGEX = "^[А-Яа-яЁёA-Za-z\\s\\-]{3,150}$";
@@ -29,14 +24,19 @@ public class Client {
 
     public Client(int id, String name, String activityType, String phone,
                   String address, String inn, String email, String contactPerson) {
-        setId(id);
-        setName(name);
-        setActivityType(activityType);
-        setPhone(phone);
+        super(id, name, activityType, phone);
         setAddress(address);
         setInn(inn);
         setEmail(email);
         setContactPerson(contactPerson);
+    }
+
+    public Client(ClientShort clientShort, String address, String inn, String email, String contactPerson) {
+        this(requireClientShort(clientShort).getId(),
+                clientShort.getName(),
+                clientShort.getActivityType(),
+                clientShort.getPhone(),
+                address, inn, email, contactPerson);
     }
 
     public Client(String data) {
@@ -44,8 +44,18 @@ public class Client {
     }
 
     private Client(String[] fields) {
-        this(parseId(fields[0]), fields[1], fields[2], fields[3],
-                fields[4], fields[5], fields[6], fields[7]);
+        super(parseId(fields[0]), fields[1], fields[2], fields[3]);
+        setAddress(fields[4]);
+        setInn(fields[5]);
+        setEmail(fields[6]);
+        setContactPerson(fields[7]);
+    }
+
+    private static ClientShort requireClientShort(ClientShort clientShort) {
+        if (clientShort == null) {
+            throw new IllegalArgumentException("Ошибка: краткий объект клиента не может быть null.");
+        }
+        return clientShort;
     }
 
     private static String[] parseData(String data) {
@@ -99,59 +109,6 @@ public class Client {
         return value.replace("\\\"", "\"").replace("\\\\", "\\");
     }
 
-    private static int parseId(String rawId) {
-        try {
-            return Integer.parseInt(rawId.trim());
-        } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Ошибка: некорректный ID: " + rawId);
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "=== Клиент [ID: " + id + "] ===\n" +
-                "  Название        : " + name + "\n" +
-                "  Вид деятельности: " + activityType + "\n" +
-                "  Телефон         : " + phone + "\n" +
-                "  Адрес           : " + address + "\n" +
-                "  ИНН             : " + inn + "\n" +
-                "  Email           : " + email + "\n" +
-                "  Контактное лицо : " + contactPerson;
-    }
-
-    public String toShortString() {
-        return String.format("[#%d] %s | %s | Тел: %s", id, name, activityType, phone);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Client client = (Client) o;
-        return id == client.id && Objects.equals(inn, client.inn);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(id, inn);
-    }
-
-    public static boolean validateId(int id) {
-        return id > 0;
-    }
-
-    public static boolean validateName(String name) {
-        return ValidationUtils.checkLength(name, 2, 255);
-    }
-
-    public static boolean validateActivityType(String activityType) {
-        return ValidationUtils.checkLength(activityType, 2, 150);
-    }
-
-    public static boolean validatePhone(String phone) {
-        return ValidationUtils.matchesRegex(phone, PHONE_REGEX);
-    }
-
     public static boolean validateAddress(String address) {
         return ValidationUtils.checkLength(address, 5, 300);
     }
@@ -166,50 +123,6 @@ public class Client {
 
     public static boolean validateContactPerson(String contactPerson) {
         return ValidationUtils.matchesRegex(contactPerson, CONTACT_PERSON_REGEX);
-    }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        if (!validateId(id)) {
-            throw new IllegalArgumentException("Ошибка: ID клиента должен быть положительным числом (> 0). Получено: " + id);
-        }
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        if (!validateName(name)) {
-            throw new IllegalArgumentException("Ошибка: некорректное наименование клиента (длина от 2 до 255 символов).");
-        }
-        this.name = name.trim();
-    }
-
-    public String getActivityType() {
-        return activityType;
-    }
-
-    public void setActivityType(String activityType) {
-        if (!validateActivityType(activityType)) {
-            throw new IllegalArgumentException("Ошибка: некорректный вид деятельности (от 2 до 150 символов).");
-        }
-        this.activityType = activityType.trim();
-    }
-
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        if (!validatePhone(phone)) {
-            throw new IllegalArgumentException("Ошибка: некорректный номер телефона. Получено: " + phone);
-        }
-        this.phone = phone.trim();
     }
 
     public String getAddress() {
@@ -254,5 +167,33 @@ public class Client {
             throw new IllegalArgumentException("Ошибка: некорректное ФИО контактного лица. Получено: " + contactPerson);
         }
         this.contactPerson = contactPerson.trim();
+    }
+
+    @Override
+    public String toString() {
+        return "=== Клиент [ID: " + getId() + "] ===\n" +
+                "  Название        : " + getName() + "\n" +
+                "  Вид деятельности: " + getActivityType() + "\n" +
+                "  Телефон         : " + getPhone() + "\n" +
+                "  Адрес           : " + address + "\n" +
+                "  ИНН             : " + inn + "\n" +
+                "  Email           : " + email + "\n" +
+                "  Контактное лицо : " + contactPerson;
+    }
+
+    public String toShortString() {
+        return super.toString();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!super.equals(o)) return false;
+        Client client = (Client) o;
+        return Objects.equals(inn, client.inn);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(super.hashCode(), inn);
     }
 }
