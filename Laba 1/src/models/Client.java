@@ -1,5 +1,7 @@
 package models;
 
+import java.util.regex.Pattern;
+
 public class Client {
 
     private int id;
@@ -23,11 +25,70 @@ public class Client {
         setContactPerson(contactPerson);
     }
 
+    public static boolean validateId(int id) {
+        return id > 0;
+    }
+
+    public static boolean validateName(String name) {
+        if (name == null || name.trim().isEmpty()) {
+            return false;
+        }
+        return name.trim().length() >= 2 && name.trim().length() <= 255;
+    }
+
+    public static boolean validateActivityType(String activityType) {
+        if (activityType == null || activityType.trim().isEmpty()) {
+            return false;
+        }
+        return activityType.trim().length() >= 2 && activityType.trim().length() <= 150;
+    }
+
+    public static boolean validatePhone(String phone) {
+        if (phone == null || phone.trim().isEmpty()) {
+            return false;
+        }
+        String regex = "^(\\+7|8)[\\s\\-]?\\(?\\d{3}\\)?[\\s\\-]?\\d{3}[\\s\\-]?\\d{2}[\\s\\-]?\\d{2}$";
+        return Pattern.matches(regex, phone.trim());
+    }
+
+    public static boolean validateAddress(String address) {
+        if (address == null || address.trim().isEmpty()) {
+            return false;
+        }
+        return address.trim().length() >= 5 && address.trim().length() <= 300;
+    }
+
+    public static boolean validateInn(String inn) {
+        if (inn == null || inn.trim().isEmpty()) {
+            return false;
+        }
+        return Pattern.matches("^\\d{10}$|^\\d{12}$", inn.trim());
+    }
+
+    public static boolean validateEmail(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            return false;
+        }
+        String regex = "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$";
+        return Pattern.matches(regex, email.trim());
+    }
+
+    public static boolean validateContactPerson(String contactPerson) {
+        if (contactPerson == null || contactPerson.trim().isEmpty()) {
+            return false;
+        }
+        String regex = "^[А-Яа-яЁёA-Za-z\\s\\-]+$";
+        return Pattern.matches(regex, contactPerson.trim()) && contactPerson.trim().length() >= 3 && contactPerson.trim().length() <= 150;
+    }
+
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
+        if (!validateId(id)) {
+            throw new IllegalArgumentException("Ошибка: ID клиента должен быть положительным числом (> 0). Получено: " + id);
+        }
         this.id = id;
     }
 
@@ -36,7 +97,10 @@ public class Client {
     }
 
     public void setName(String name) {
-        this.name = name;
+        if (!validateName(name)) {
+            throw new IllegalArgumentException("Ошибка: некорректное наименование клиента (длина от 2 до 255 символов).");
+        }
+        this.name = name.trim();
     }
 
     public String getActivityType() {
@@ -44,7 +108,10 @@ public class Client {
     }
 
     public void setActivityType(String activityType) {
-        this.activityType = activityType;
+        if (!validateActivityType(activityType)) {
+            throw new IllegalArgumentException("Ошибка: некорректный вид деятельности (от 2 до 150 символов).");
+        }
+        this.activityType = activityType.trim();
     }
 
     public String getPhone() {
@@ -52,7 +119,10 @@ public class Client {
     }
 
     public void setPhone(String phone) {
-        this.phone = phone;
+        if (!validatePhone(phone)) {
+            throw new IllegalArgumentException("Ошибка: некорректный номер телефона. Получено: " + phone);
+        }
+        this.phone = phone.trim();
     }
 
     public String getAddress() {
@@ -60,7 +130,10 @@ public class Client {
     }
 
     public void setAddress(String address) {
-        this.address = address;
+        if (!validateAddress(address)) {
+            throw new IllegalArgumentException("Ошибка: некорректный адрес (длина от 5 до 300 символов).");
+        }
+        this.address = address.trim();
     }
 
     public String getInn() {
@@ -68,7 +141,10 @@ public class Client {
     }
 
     public void setInn(String inn) {
-        this.inn = inn;
+        if (!validateInn(inn)) {
+            throw new IllegalArgumentException("Ошибка: некорректный ИНН (должен содержать 10 или 12 цифр). Получено: " + inn);
+        }
+        this.inn = inn.trim();
     }
 
     public String getEmail() {
@@ -76,7 +152,10 @@ public class Client {
     }
 
     public void setEmail(String email) {
-        this.email = email;
+        if (!validateEmail(email)) {
+            throw new IllegalArgumentException("Ошибка: некорректный адрес электронной почты. Получено: " + email);
+        }
+        this.email = email.trim();
     }
 
     public String getContactPerson() {
@@ -84,6 +163,9 @@ public class Client {
     }
 
     public void setContactPerson(String contactPerson) {
-        this.contactPerson = contactPerson;
+        if (!validateContactPerson(contactPerson)) {
+            throw new IllegalArgumentException("Ошибка: некорректное ФИО контактного лица. Получено: " + contactPerson);
+        }
+        this.contactPerson = contactPerson.trim();
     }
 }

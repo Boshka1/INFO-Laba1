@@ -6,21 +6,31 @@ public class Main {
         System.out.println("Вариант 7: Нотариальная контора");
         System.out.println("Студент: Дражин Н.О.\n");
 
-        Client client = new Client(
+        Client validClient = new Client(
                 1,
                 "ООО \"СтройИнвест\"",
-                "Строительство и девелопмент",
+                "Строительство",
                 "+7 (999) 123-45-67",
                 "г. Краснодар, ул. Красная, д. 120",
                 "2310123456",
                 "info@stroyinvest.ru",
                 "Иванов Иван Иванович"
         );
+        System.out.println("Клиент: " + validClient.getName() + " | ИНН: " + validClient.getInn());
 
-        System.out.println("ID: " + client.getId());
-        System.out.println("Название: " + client.getName());
-        System.out.println("Вид деятельности: " + client.getActivityType());
-        System.out.println("Телефон: " + client.getPhone());
-        System.out.println("ИНН: " + client.getInn());
+        try {
+            new Client(
+                    2,
+                    "ИП Смирнов",
+                    "Торговля",
+                    "+7 (999) 123-45-67",
+                    "г. Краснодар, ул. Ленина, д. 5",
+                    "12345",
+                    "smirnov@mail.ru",
+                    "Смирнов Алексей"
+            );
+        } catch (IllegalArgumentException e) {
+            System.out.println("Исключение при невалидном ИНН: " + e.getMessage());
+        }
     }
 }
