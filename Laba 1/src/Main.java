@@ -1,4 +1,5 @@
 import models.Client;
+import models.ClientShort;
 
 public class Main {
     public static void main(String[] args) {
@@ -6,7 +7,7 @@ public class Main {
         System.out.println("Вариант 7: Нотариальная контора");
         System.out.println("Студент: Дражин Н.О.\n");
 
-        Client c1 = new Client(
+        Client fullClient = new Client(
                 1,
                 "ООО \"СтройИнвест\"",
                 "Строительство",
@@ -17,29 +18,18 @@ public class Main {
                 "Иванов Иван Иванович"
         );
 
-        Client c2 = new Client("2;АО \"КубаньАгро\";Сельское хозяйство;+7 (861) 222-33-44;г. Краснодар, ул. Северная, д. 45;2311987654;agro@kuban.ru;Сидоров Алексей");
-
-        Client c1Duplicate = new Client(
-                1,
-                "ООО \"СтройИнвест Групп\"",
-                "Девелопмент",
-                "+7 (999) 123-45-67",
-                "г. Краснодар, ул. Красная, д. 120",
-                "2310123456",
-                "sales@stroyinvest.ru",
-                "Петров Петр"
+        ClientShort shortFromFull = new ClientShort(
+                fullClient.getId(),
+                fullClient.getName(),
+                fullClient.getActivityType(),
+                fullClient.getPhone()
         );
+        ClientShort shortDirect = new ClientShort(2, "АО \"КубаньАгро\"", "Сельское хозяйство", "+7 (861) 222-33-44");
+        ClientShort shortFromString = new ClientShort("3;ООО \"АйтиСофт\";Разработка ПО;88005553535");
 
-        System.out.println("Полная версия (toString):");
-        System.out.println(c1);
-
-        System.out.println("\nКраткая версия (toShortString):");
-        System.out.println(c1.toShortString());
-        System.out.println(c2.toShortString());
-
-        System.out.println("\nСравнение (equals и hashCode):");
-        System.out.println("c1.equals(c1Duplicate): " + c1.equals(c1Duplicate));
-        System.out.println("c1.equals(c2): " + c1.equals(c2));
-        System.out.println("hashCode c1 / c1Duplicate: " + c1.hashCode() + " / " + c1Duplicate.hashCode());
+        System.out.println(fullClient);
+        System.out.println("\n" + shortFromFull);
+        System.out.println(shortDirect);
+        System.out.println(shortFromString);
     }
 }
